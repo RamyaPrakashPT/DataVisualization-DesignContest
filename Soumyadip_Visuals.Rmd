@@ -1,0 +1,21 @@
+---
+title: "Visualizations"
+author: "Soumyadip"
+date: "10/14/2019"
+output: html_document
+---
+# TiduTuesday
+## PowerLifting Github Page
+https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-10-08 -->
+
+```{r library-load, message=FALSE, warning=FALSE, include=FALSE}
+library(tidyverse)
+```
+
+```{r data-load, message=FALSE, warning=FALSE}
+ipf_lifts <- read_csv("data/ipf_lifts.csv")
+```
+
+```{r preview-data, message=FALSE, warning=FALSE}
+glimpse(ipf_lifts)
+```
