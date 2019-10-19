@@ -3,9 +3,8 @@ title: "VA project"
 ---
 
 ```{r setup,warning=FALSE,include=FALSE}
-install.packages("tidyverse")
 library(tidyverse)
-ipf_lifts <- read_csv("VA project/ipf_lifts.csv")
+ipf_lifts <- read_csv("data/ipf_lifts.csv")
 ```
 
 ## R Markdown

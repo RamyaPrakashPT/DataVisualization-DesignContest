@@ -1,0 +1,176 @@
+---
+title: "HTML Widgets Showcase"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+    social: menu
+    source: embed
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+
+tweets <- rtweet::read_twitter_csv("data/tweets.csv")
+```
+
+### Leaflet is a JavaScript library for creating dynamic maps that support panning and zooming along with various annotations.
+
+```{r}
+library(leaflet)
+tweets %>%            # tweets data frame
+  leaflet() %>%       # pass to leaflet
+  addTiles() %>%      # add tiles
+  addCircleMarkers(
+    lng=tweets$lng,      # latitude
+    lat=tweets$lat,      # longitude
+    popup = tweets$text, # add tweet text
+    clusterOptions = markerClusterOptions()
+  )
+```
+
+***
+
+https://rstudio.github.io/leaflet/
+
+- Interactive panning/zooming
+
+- Compose maps using arbitrary combinations of map tiles, markers, polygons, lines, popups, and GeoJSON.
+
+- Create maps right from the R console or RStudio
+
+- Embed maps in knitr/R Markdown documents and Shiny apps
+
+- Easily render Spatial objects from the sp package, or data frames with latitude/longitude columns
+
+- Use map bounds and mouse events to drive Shiny logic
+
+
+### networkD3 D3 JavaScript Network Graphs from R
+
+```{r}
+library(networkD3)
+URL <- paste0(
+        "https://cdn.rawgit.com/christophergandrud/networkD3/",
+        "master/JSONdata/energy.json")
+Energy <- jsonlite::fromJSON(URL)
+# Plot
+sankeyNetwork(Links = Energy$links, Nodes = Energy$nodes, Source = "source",
+             Target = "target", Value = "value", NodeID = "name",
+             units = "TWh", width = 800, fontSize = 8, nodeWidth = 20)
+```
+
+
+***
+
+Use D3 code for networks but as an R package.
+
+See the many examples here: https://christophergandrud.github.io/networkD3/
+
+### mapview: Interactive viewing of spatial data in R
+
+```{r}
+library(mapview)
+
+mapview(breweries)
+```
+
+
+***
+
+- `mapview` provides functions to very quickly and conveniently create interactive visualisations of spatial data. 
+
+- It was created to fill the gap of quick (not presentation grade) interactive plotting to examine and visually investigate both aspects of spatial data, the geometries and their attributes.
+
+
+### tmap is a R-library for drawing thematic maps, written by Martijn Tennekes.
+
+```{r}
+library(tmap)
+tmap_mode("plot")
+data(World)
+tm_shape(World) +
+  tm_polygons("HPI")
+```
+
+***
+
+https://github.com/mtennekes/tmap
+
+Thematic maps show spatial distributions. 
+
+- The theme refers to the phenomena that is shown, which is often demographical, social, cultural, or economic. 
+
+- The best known thematic map type is the choropleth, in which regions are colored according to the distribution of a data variable. 
+
+- The R package `tmap` offers a coherent plotting system for thematic maps that is based on the layered grammar of graphics.
+
+
+### Dygraphs provides rich facilities for charting time-series data in R and includes support for many interactive features.
+
+```{r}
+library(dygraphs)
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
+```
+
+***
+
+https://rstudio.github.io/dygraphs/
+
+- Automatically plots xts time series objects (or any object convertible to xts).
+
+- Highly configurable axis and series display (including optional second Y-axis).
+
+- Rich interactive features including zoom/pan and series/point highlighting.
+
+- Display upper/lower bars (e.g. prediction intervals) around series.
+- Various graph overlays including shaded regions, event lines, and point annotations.
+
+
+### Plotly provides bindings to the plotly.js library and allows you to easily translate your ggplot2 graphics into an interactive web-based version.
+
+```{r}
+library(plotly)
+p <- ggplot(data = diamonds, aes(x = cut, fill = clarity)) +
+            geom_bar(position = "dodge")
+ggplotly(p)
+```
+
+***
+
+https://plot.ly/ggplot2/
+
+If you use ggplot2, `ggplotly()` converts your plots to an interactive, web-based version! It also provides sensible tooltips, which assists decoding of values encoded as visual properties in the plot.
+
+plotly supports some chart types that ggplot2 doesn't (such as 3D surface, point, and line plots). You can create these (or any other plotly) charts using `plot_ly()`.
+
+
+### rhandsontable is a htmlwidgets implementation of Handsontable.js 
+
+```{r}
+library(rhandsontable)
+
+DF = data.frame(int = 1:10,
+                numeric = rnorm(10),
+                logical = TRUE,
+                character = LETTERS[1:10],
+                fact = factor(letters[1:10]),
+                date = seq(from = Sys.Date(), by = "days", length.out = 10),
+                stringsAsFactors = FALSE)
+
+# add a sparkline chart
+DF$chart = sapply(1:10, function(x) jsonlite::toJSON(list(values=rnorm(10))))
+                                                    
+rhandsontable(DF, rowHeaders = NULL, width = 600) %>%
+  hot_col("chart", renderer = htmlwidgets::JS("renderSparkline"))
+```
+
+***
+
+http://jrowen.github.io/rhandsontable/
+
+https://github.com/jrowen/rhandsontable/
+
+rhandsontable is a htmlwidget based on the handsontable.js library.
+
+Handsontable is a data grid component with an Excel-like appearance. Built in JavaScript, it integrates with any data source with peak efficiency. It comes with powerful features like data validation, sorting, grouping, data binding, formula support or column ordering. 
