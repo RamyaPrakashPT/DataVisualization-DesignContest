@@ -226,15 +226,15 @@ b_gif
 #install.packages("magick")
 library(magick)
 a_mgif <- image_read(a_gif)
-#b_mgif <- image_read(b_gif)
+b_mgif <- image_read(b_gif)
 
-#new_gif <- image_append(c(a_mgif[1], b_mgif[1]), stack = TRUE)
-#for(i in 2:250){
- # combined <- image_append(c(a_mgif[i], b_mgif[i]), stack = TRUE)
-  #new_gif <- c(new_gif, combined)
-#}
+new_gif <- image_append(c(a_mgif[1], b_mgif[1]), stack = TRUE)
+for(i in 2:250){
+  combined <- image_append(c(a_mgif[i], b_mgif[i]), stack = TRUE)
+  new_gif <- c(new_gif, combined)
+}
 
-#new_gif
+new_gif
 ```
 
 ## RamyaP visuals: 
