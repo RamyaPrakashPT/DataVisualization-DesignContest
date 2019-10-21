@@ -2,7 +2,9 @@
 title: "Design Contest"
 output: 
   flexdashboard::flex_dashboard:
-    source_code: embed
+    source_code: "https://github.com/RamyaPrakashPT/DataVisualization-DesignContest"
+    theme: spacelab
+    social: [ "twitter", "facebook", "menu" ]
 ---
 ```{r include=FALSE}
 library(flexdashboard)
@@ -208,7 +210,7 @@ new_gif
 
 ***
 
-- Showing both the grphs together is a huge improvement as it lets the user see the actual values, the change and also the trend over years
+- Showing both the graphs together is a huge improvement as it lets the user see the actual values, the change and also the trend over years
 
 - But there can be more ways to find out insights from the data and look at the distribution and hidden trends
 
@@ -245,9 +247,7 @@ ipf_lifts %>%
 
 ***
 
-- This visual shows the distribution of weights lifted by different age groups
-
-- The visuals shows the different quartiles
+- This visual shows the distribution of weights lifted by different age groups with the quartiles separated by color (Viridis)
 
 - The third quartile (Green) contains 50 to 75 precentile points and shows that people of ages between 24 to 34 lift the highest weights
 
@@ -312,8 +312,8 @@ g_count <- ggplot(competition, aes(x = n, y= total, fill = sex)) +
   facet_grid(sex ~ .)+
   scale_x_continuous(breaks = seq(0,12,1))+
   scale_y_continuous(breaks = seq(0,50,5))+
-  labs(y= "# of participants reaching that max", x = "Number of max achieved", 
-       title = "How do the max \nachievements \ndistribute \nacross participants?",
+  labs(y= "# of participants reaching the max", x = "Number of max achieved", 
+       title = "How do the max achievements distribute across participants?",
        subtitle = "",
        caption = "")+
   theme(
