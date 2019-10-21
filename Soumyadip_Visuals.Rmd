@@ -25,7 +25,7 @@ glimpse(ipf_lifts)
 ```
 
 ## Lets see the effect of age on the max weight that can be lifted in squat
-```{r fig.height=4, fig.width=8}
+```{r fig.height=5, fig.width=10}
 ipf_lifts %>%
   mutate(age_class = fct_rev(as.factor(age_class))) %>%
   filter(age_class != '5-12') %>%
@@ -39,7 +39,7 @@ ipf_lifts %>%
   scale_x_continuous(limits = c(0,510),expand = c(0,0),labels=unit_format(unit="Kg")) +
   theme_bw() +
   labs(
-    title = "Effects of Age on Weights (Squat)",
+    title = "Distribution of Weight lifted in Squat for different Age Groups",
     x = "",
     y = "Age Classification"
   )

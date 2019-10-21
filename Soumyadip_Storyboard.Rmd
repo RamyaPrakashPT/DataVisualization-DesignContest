@@ -1,7 +1,8 @@
 ---
-title: "Soumyadip Storyboard"
+title: "Design Contest"
 output: 
-  flexdashboard::flex_dashboard
+  flexdashboard::flex_dashboard:
+    source_code: embed
 ---
 ```{r include=FALSE}
 library(flexdashboard)
@@ -97,7 +98,11 @@ max_lifts_final %>%
 
 https://connorrothschild.github.io/tidytuesday/2019-10-08/index
 
-- The dumbell plot match with the theme of the dataset
+- The dumbell plot is matching with the theme of the dataset very well
+
+- It's also a new kind of plot that we have not seen before
+
+- But it is lacking some sense of time and user interactiveness
 
 ### Replication of Second Work
 
@@ -137,7 +142,13 @@ a_gif
 
 ***
 
-- Comments
+- This plot added the time dimension to the plot by displaying the visual around in a time series
+
+- This is definitely a great improvement from the previous one
+
+- But this graph do not append the yearly data and hence the user might immediately forget the previous year's values
+
+- Hence the user will not able to compare the change over the years and will not be able to see the trend
 
 ### Replication of Third Work
 
@@ -172,7 +183,11 @@ b_gif
 
 ***
 
-- More and more comments
+- This graph resolves the issue where it keeps on appending the previous year's data
+
+- The user is able to follow the change now and also able to visualize the trend
+
+- But this graph gives a little bit different visual of the data
 
 ### Replication of Fourth Work
 
@@ -193,14 +208,18 @@ new_gif
 
 ***
 
-- Critic the work
+- Showing both the grphs together is a huge improvement as it lets the user see the actual values, the change and also the trend over years
+
+- But there can be more ways to find out insights from the data and look at the distribution and hidden trends
+
+- Also the visuals can be made interactive to engage the user more with the data, hence come our visuals and ideas
 
 Our Visuals {.storyboard}
 =========================================
 
 ### Visual 1
 
-```{r}
+```{r Soumyadip Visual, fig.height=5, fig.width=10}
 library(ggridges)
 library(scales)
 library(viridis)
@@ -218,7 +237,7 @@ ipf_lifts %>%
   scale_x_continuous(limits = c(0,510),expand = c(0,0),labels=unit_format(unit="Kg")) +
   theme_bw() +
   labs(
-    title = "Effects of Age on Weights (Squat)",
+    title = "Distribution of Weight lifted in Squat for different Age Groups",
     x = "",
     y = "Age Classification"
   )
@@ -226,11 +245,17 @@ ipf_lifts %>%
 
 ***
 
-- Comments of Visual 1
+- This visual shows the distribution of weights lifted by different age groups
+
+- The visuals shows the different quartiles
+
+- The third quartile (Green) contains 50 to 75 precentile points and shows that people of ages between 24 to 34 lift the highest weights
+
+- Beyond that age group, the capability of lifting weights decreases gradually
 
 ### Visual 2
 
-```{r}
+```{r Ramya Visuals}
 library(gganimate)
 library(gifski)
 library(ggridges)
@@ -260,7 +285,7 @@ my_gif
 
 ### Visual 3
 
-```{r}
+```{r Shruti Visuals}
 ipf <- ipf_lifts %>% 
   mutate(year = as.numeric(format(date, '%Y'))) %>% 
   select(-event, -division, -federation, -date) %>% 
