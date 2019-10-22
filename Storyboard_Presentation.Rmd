@@ -1,0 +1,335 @@
+---
+title: "Design Contest"
+output: 
+  flexdashboard::flex_dashboard:
+    source_code: embed
+    theme: spacelab
+    social: [ "twitter", "facebook", "menu" ]
+---
+```{r include=FALSE}
+library(flexdashboard)
+library(ggplot2)
+library(tidyverse)
+library(tidyr)
+library(lubridate)
+```
+
+```{r load-data}
+ipf_lifts <- read_csv("data/ipf_lifts.csv")
+```
+```{r clean_data-01}
+ipf_lifts1 <- ipf_lifts %>% 
+  mutate(year = lubridate::year(date))
+
+ipf_lifts_reshape <- ipf_lifts1 %>% 
+  tidyr::pivot_longer(cols = c("best3squat_kg", "best3bench_kg", "best3deadlift_kg"), names_to = "lift") %>% 
+  select(name, sex, year, lift, value)
+```
+
+```{r clean_data-02}
+ipf_lifts_maxes <- ipf_lifts_reshape %>% 
+  group_by(year, sex, lift) %>% 
+  top_n(1, value) %>% 
+  ungroup %>% 
+  distinct(year, lift, value, .keep_all = TRUE)
+```
+
+```{r clean_data-03}
+max_pivot <- ipf_lifts_maxes %>% 
+  spread(sex, value)
+```
+
+```{r clean_data-04}
+male_lifts <- max_pivot %>% 
+  select(-name) %>% 
+  filter(!is.na(M)) %>% 
+  group_by(year, lift) %>% 
+  summarise(male = mean(M))
+
+female_lifts <- max_pivot %>% 
+  select(-name) %>% 
+  filter(!is.na(`F`)) %>% 
+  group_by(year, lift) %>% 
+  summarise(female = mean(`F`))
+
+max_lifts <- merge(male_lifts, female_lifts)
+
+max_lifts_final <- max_lifts %>% 
+  group_by(year, lift) %>% 
+  mutate(diff = male - female)
+```
+
+Replication {.storyboard}
+=========================================
+
+### Replication of First Work
+
+```{r viz-01}
+#install.packages("devtools")
+#devtools::install_github("clauswilke/ggtext")
+#devtools::install_github("connorrothschild/tpltheme")
+library(tpltheme)
+#install.packages("ggalt")
+library(ggtext)
+max_lifts_final %>% 
+  filter(year == 2019) %>% 
+  ggplot() + 
+  ggalt::geom_dumbbell(aes(y = lift,
+                    x = female, xend = male),
+                colour = "grey", size = 5,
+                colour_x = "#D6604C", colour_xend = "#395B74") +
+  labs(y = element_blank(),
+       x = "Top Lift Recorded (kg)",
+       title =  "How <span style='color:#D6604C'>Women</span> and <span style='color:#395B74'>Men</span> Differ in Top Lifts",
+       subtitle = "In 2019") +
+  theme(plot.title = element_markdown(lineheight = 1.1, size = 20),
+        plot.subtitle = element_text(size = 15)) +
+  scale_y_discrete(labels = c("Bench", "Deadlift", "Squat")) +
+  drop_axis(axis = "y") +
+  geom_text(aes(x = female, y = lift, label = paste(female, "kg")),
+            color = "#D6604C", size = 4, vjust = -2) +
+  geom_text(aes(x = male, y = lift, label = paste(male, "kg")),
+            color = "#395B74", size = 4, vjust = -2) +
+  geom_rect(aes(xmin=430, xmax=470, ymin=-Inf, ymax=Inf), fill="grey80") +
+  geom_text(aes(label=diff, y=lift, x=450), fontface="bold", size=4) +
+  geom_text(aes(x=450, y=3, label="Difference"),
+                     color="grey20", size=4, vjust=-3, fontface="bold")
+```
+
+***
+
+https://connorrothschild.github.io/tidytuesday/2019-10-08/index
+
+- The dumbell plot is matching with the theme of the dataset very well
+
+- It's also a new kind of plot that we have not seen before
+
+- But it is lacking some sense of time and user interactiveness
+
+### Replication of Second Work
+
+```{r viz-animation-01}
+#install.packages('gganimate')
+#install.packages("gifski")
+library(gganimate)
+library(gifski)
+animation <- max_lifts_final %>% 
+  ggplot() + 
+  ggalt::geom_dumbbell(aes(y = lift,
+                    x = female, xend = male),
+                colour = "grey", size = 5,
+                colour_x = "#D6604C", colour_xend = "#395B74") +
+  labs(y = element_blank(),
+       x = "Top Lift Recorded (kg)",
+       title =  "How <span style='color:#D6604C'>Women</span> and <span style='color:#395B74'>Men</span> Differ in Top Lifts",
+       subtitle='\nThis plot depicts the difference between the heaviest lifts for each sex at International Powerlifting Federation\nevents over time. \n \n{closest_state}') +
+  theme(plot.title = element_markdown(lineheight = 1.1, size = 25, margin=margin(0,0,0,0)),
+        plot.subtitle = element_text(size = 15, margin=margin(8,0,-30,0))) +
+  scale_y_discrete(labels = c("Bench", "Deadlift", "Squat")) +
+  drop_axis(axis = "y") +
+  geom_text(aes(x = female, y = lift, label = paste(female, "kg")),
+            color = "#D6604C", size = 4, vjust = -2) +
+  geom_text(aes(x = male, y = lift, label = paste(male, "kg")),
+            color = "#395B74", size = 4, vjust = -2) +
+  transition_states(year, transition_length = 4, state_length = 1) +
+  ease_aes('cubic-in-out')
+
+a_gif <- animate(animation, 
+                 fps = 10, 
+                 duration = 25,
+        width = 800, height = 400, 
+        renderer = gifski_renderer("./heavy_lifts_each_sex.gif"))
+a_gif
+```
+
+***
+
+- This plot added the time dimension to the plot by displaying the visual around in a time series
+
+- This is definitely a great improvement from the previous one
+
+- But this graph do not append the yearly data and hence the user might immediately forget the previous year's values
+
+- Hence the user will not able to compare the change over the years and will not be able to see the trend
+
+### Replication of Third Work
+
+```{r}
+animation2 <- max_lifts_final %>% 
+  ungroup %>% 
+  mutate(lift = case_when(lift == "best3bench_kg" ~ "Bench",
+                          lift == "best3squat_kg" ~ "Squat",
+                          lift == "best3deadlift_kg" ~ "Deadlift")) %>% 
+  ggplot(aes(year, diff, group = lift, color = lift)) + 
+  geom_line(show.legend = FALSE) + 
+  geom_segment(aes(xend = 2019.1, yend = diff), linetype = 2, colour = 'grey', show.legend = FALSE) + 
+  geom_point(size = 2, show.legend = FALSE) + 
+  geom_text(aes(x = 2019.1, label = lift, color = "#000000"), hjust = 0, show.legend = FALSE) + 
+  drop_axis(axis = "y") +
+  transition_reveal(year) +
+  coord_cartesian(clip = 'off') +
+  theme(plot.title = element_text(size = 20)) +
+  labs(title = 'Difference over time',
+       y = 'Difference (kg)',
+       x = element_blank()) + 
+  theme(plot.margin = margin(5.5, 40, 5.5, 5.5))
+
+b_gif <- animate(animation2, 
+                 fps = 10, 
+                 duration = 25,
+        width = 800, height = 200, 
+        renderer = gifski_renderer("./difference_over_time.gif"))
+
+b_gif
+```
+
+***
+
+- This graph resolves the issue where it keeps on appending the previous year's data
+
+- The user is able to follow the change now and also able to visualize the trend
+
+- But this graph gives a little bit different visual of the data
+
+### Replication of Fourth Work
+
+```{r viz-animation-03}
+#install.packages("magick")
+library(magick)
+a_mgif <- image_read(a_gif)
+b_mgif <- image_read(b_gif)
+
+new_gif <- image_append(c(a_mgif[1], b_mgif[1]), stack = TRUE)
+for(i in 2:250){
+  combined <- image_append(c(a_mgif[i], b_mgif[i]), stack = TRUE)
+  new_gif <- c(new_gif, combined)
+}
+
+new_gif
+```
+
+***
+
+- Showing both the graphs together is a huge improvement as it lets the user see the actual values, the change and also the trend over years
+
+- But there can be more ways to find out insights from the data and look at the distribution and hidden trends
+
+- Also the visuals can be made interactive to engage the user more with the data, hence come our visuals and ideas
+
+Our Visuals {.storyboard}
+=========================================
+
+### Visual 1
+
+```{r Soumyadip Visual, fig.height=5, fig.width=10}
+library(ggridges)
+library(scales)
+library(viridis)
+library(forcats)
+ipf_lifts %>%
+  mutate(age_class = fct_rev(as.factor(age_class))) %>%
+  filter(age_class != '5-12') %>%
+  filter(age_class != '80-999') %>%
+  drop_na(c(age_class,best3squat_kg)) %>%
+  ggplot(aes(x=best3squat_kg,y=age_class,fill=factor(..quantile..))) +
+  stat_density_ridges(geom="density_ridges_gradient",calc_ecdf = TRUE,
+                      quantiles = 4,quantile_lines = TRUE,
+                      na.rm = TRUE) +
+  scale_fill_viridis(discrete = TRUE,name="Quartiles") +
+  scale_x_continuous(limits = c(0,510),expand = c(0,0),labels=unit_format(unit="Kg")) +
+  theme_bw() +
+  labs(
+    title = "Distribution of Weight lifted in Squat for different Age Groups",
+    x = "",
+    y = "Age Classification"
+  )
+```
+
+***
+
+- This visual shows the distribution of weights lifted by different age groups with the quartiles separated by color (Viridis)
+
+- The third quartile (Green) contains 50 to 75 precentile points and shows that people of ages between 24 to 34 lift the highest weights
+
+- Beyond that age group, the capability of lifting weights decreases gradually
+
+### Visual 2
+
+```{r Ramya Visuals}
+library(gganimate)
+library(gifski)
+library(ggridges)
+ipf_lifts_year <- ipf_lifts %>% 
+                  mutate(year = format(date, "%Y")) %>%
+                  filter(year %in% c(2009:2019))
+
+ipf_lifts_decade<- ggplot(data=ipf_lifts_year, mapping = aes(x=best3squat_kg, y=year, fill=sex)) + 
+geom_density_ridges() + 
+scale_fill_manual(values = colorspace::darken(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#999999")), labels = c("female", "male")) +
+scale_color_manual(values = colorspace::darken(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#999999"), 0.3))+
+labs(x = 	"Weight (kg)",y = "Year",title = "Squat") +
+scale_x_continuous(limits = c(10,500)) + theme_ridges()+ transition_manual(year)
+
+my_gif <- animate(ipf_lifts_decade, 
+                 fps = 5, 
+                 duration = 10,
+        width = 800, height = 200, 
+        renderer = gifski_renderer("./ipf_lifts_decade.gif"))
+
+my_gif
+```
+
+***
+
+- Comments of Visual 2
+
+### Visual 3
+
+```{r Shruti Visuals}
+ipf <- ipf_lifts %>% 
+  mutate(year = as.numeric(format(date, '%Y'))) %>% 
+  select(-event, -division, -federation, -date) %>% 
+  gather(activity, weight, best3squat_kg:best3deadlift_kg) %>% 
+  group_by(year)
+max <- ipf %>%
+  group_by(sex, activity, year) %>%
+  filter(place != "DD" & place != "DQ" & !is.na(weight) & weight == max(weight, na.rm = T),
+         year >= 1980) %>% 
+  ungroup() %>% 
+  group_by (name) %>% 
+  mutate(activity = recode(activity, "best3bench_kg" = "Bench", 
+  "best3deadlift_kg" = "Deadlift", "best3squat_kg" = "Squat"),
+  sex = recode(sex, "F" = "Female", 'M' = "Male")) %>%
+  arrange(desc(year))
+competition <- max %>% 
+  group_by(sex, name) %>% 
+  summarise(n = n()) %>% 
+  group_by(sex, n) %>% 
+  summarise(total = n())
+#number of max achieved
+g_count <- ggplot(competition, aes(x = n, y= total, fill = sex)) +
+  geom_bar(stat = "identity")+
+  facet_grid(sex ~ .)+
+  scale_x_continuous(breaks = seq(0,12,1))+
+  scale_y_continuous(breaks = seq(0,50,5))+
+  labs(y= "# of participants reaching the max", x = "Number of max achieved", 
+       title = "How do the max achievements distribute across participants?",
+       subtitle = "",
+       caption = "")+
+  theme(
+    strip.text = element_blank(),
+    plot.title = element_text(size = 12),
+    legend.title = element_blank(),
+    legend.position='top',
+    legend.background = element_rect(fill = "transparent"),
+    legend.box.background = element_rect(fill = "transparent"),
+    legend.spacing.x = unit(0.4, 'cm'),
+    legend.text = element_text(size = 12),
+  )
+
+g_count
+```
+
+***
+
+- Comments of Visual 3
