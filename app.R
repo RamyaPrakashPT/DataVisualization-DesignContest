@@ -10,6 +10,10 @@ library(lubridate)
 library(tpltheme)
 library(ggtext)
 library(ggalt)
+library(ggridges)
+library(scales)
+library(viridis)
+library(forcats)
 
 shinyApp(
     ui = tagList(
@@ -29,56 +33,31 @@ shinyApp(
                                       plotOutput("dumbellPlot")
                              ),
                              tabPanel("Data",
-                                      h4("Please find the data here"),
+                                      h4("Please find the data below"),
                                       DT::dataTableOutput("table1")
                                       )
                          )
                      )
             ),
-            tabPanel("Visual 2",
+            tabPanel("Interactive Distribution",
                      sidebarPanel(
-                         textInput("txt", "Text input for Visual 2:", "general"),
-                         sliderInput("slider", "Slider input:", 1, 100, 30),
-                         tags$h5("Default actionButton:"),
-                         actionButton("action", "Search"),
-                         
-                         tags$h5("actionButton with CSS class:"),
-                         actionButton("action2", "Action button", class = "btn-primary")
+                         h4("Select the Year to see the corresponding distribution"),
+                         sliderInput("year2", "Year :", min=1980, max=2019, value=1985, 
+                                     animate =
+                                         animationOptions(interval=2000,loop=TRUE))
                      ),
                      mainPanel(
                          tabsetPanel(
-                             tabPanel("Plot 2",
-                                      h4("We will put the plot here")
+                             tabPanel("Ggridges",
+                                      plotOutput("ridgePlot")
                              ),
                              tabPanel("Data",
-                                      h4("Data here for Visual 2"),
-                                      tableOutput("table2")
+                                      h4("Please find the data below"),
+                                      DT::dataTableOutput("table2")
                              )
                          )
                      )
-            ),
-            tabPanel("Visual 3", 
-                     sidebarPanel(
-                         textInput("txt", "Text input for Visual 3:", "general"),
-                         sliderInput("slider", "Slider input:", 1, 100, 30),
-                         tags$h5("Default actionButton:"),
-                         actionButton("action", "Search"),
-                         
-                         tags$h5("actionButton with CSS class:"),
-                         actionButton("action2", "Action button", class = "btn-primary")
-                     ),
-                     mainPanel(
-                         tabsetPanel(
-                             tabPanel("Plot 3",
-                                      h4("We will put the plot here")
-                             ),
-                             tabPanel("Data",
-                                      h4("Data here for Visual 3"),
-                                      tableOutput("table3")
-                             )
-                         )
-                     )
-                )
+            )
         )
     ),
     
@@ -136,11 +115,35 @@ shinyApp(
                 geom_text(aes(x=450, y=3, label="Difference"),
                           color="grey20", size=4, vjust=-3, fontface="bold")
         })
+        
         output$table1 <- DT::renderDataTable(DT::datatable(max_lifts_final))
+        
+        ipf_lifts2 <- ipf_lifts %>%
+            mutate(year = lubridate::year(date)) %>%
+            mutate(age_class = fct_rev(as.factor(age_class))) %>%
+            filter(age_class != '5-12') %>%
+            filter(age_class != '80-999') %>%
+            drop_na(c(age_class,best3squat_kg))
             
-        output$table2 <- renderTable({
-            head(cars, 8)
+        ipf_lifts_year <- reactive({filter(ipf_lifts2,year==input$year2)})
+        
+        output$ridgePlot <- renderPlot({
+            ggplot(ipf_lifts_year(),aes(x=best3squat_kg,y=age_class,fill=factor(..quantile..))) +
+                stat_density_ridges(geom="density_ridges_gradient",calc_ecdf = TRUE,
+                                    quantiles = 4,quantile_lines = TRUE,
+                                    na.rm = TRUE) +
+                scale_fill_viridis(discrete = TRUE,name="Quartiles") +
+                scale_x_continuous(limits = c(0,510),expand = c(0,0),labels=unit_format(unit="Kg")) +
+                theme_bw() +
+                labs(
+                    title = "Distribution of Weight lifted in Squat for different Age Groups",
+                    x = "",
+                    y = "Age Classification"
+                )
         })
+            
+        output$table2 <- DT::renderDataTable(DT::datatable(ipf_lifts2))
+        
         output$table3 <- renderTable({
             head(cars, 10)
         })
