@@ -58,11 +58,121 @@ max_lifts_final <- max_lifts %>%
   group_by(year, lift) %>% 
   mutate(diff = male - female)
 ```
+Introduction {.storyboard}
+=========================================
+
+###  #tidytuesday-POWERLIFTING
+
+```{r intro-01,fig.height=5, fig.width=8}
+library("png")
+
+pp <- readPNG("img/Introduction.PNG")
+plot.new() 
+rasterImage(pp,0,0,1,1)
+```
+
+***
+
+
+
+
+#TidyTuesday - Powerlifting
+
+Powerlifting is a strength sport and weight training exercise that consists of three attempts at maximal weight on the following three lifts: 
+
+1.Squat
+
+2.Bench press
+
+3.Deadlift.
+
+
+
+Powerlifting is becoming a popular sport now-a-days. The idea behind powerlifting is not focused on gaining muscle but rather building strength to lift as much weight as possible.
+
+
+### DATA DESCRIPTION
+
+
+```{r basic-distribution, fig.height=6, fig.width=12, echo=FALSE}
+
+p_distribution <- ipf_lifts %>% 
+
+  select(starts_with("best3")) %>% 
+
+  rename(Squat = "best3squat_kg", 
+
+         Bench = "best3bench_kg",
+
+         Deadlift = "best3deadlift_kg") %>% 
+
+  pivot_longer(cols = everything(), names_to = "type", values_to = "weight") %>% 
+
+  filter(!is.na(weight) & weight > 0) %>% 
+
+  ggplot(aes(x = weight)) +
+
+    geom_histogram(binwidth = 10) +
+
+    facet_wrap(facets = ~ type) +
+
+  labs(title = "Distribution of maximum weights lifted",
+
+       subtitle = "",
+
+       x = "Maximum weight lifted (kgs)",
+
+       y = "Count") +
+
+    theme(axis.ticks = element_blank())
+
+
+
+p_distribution
+```
+
+***
+
+#About the Data
+
+We are exploring Powerlifting Dataset focusing on international powerlifting compitations. This dataset was published in #TidyTuesday - R4DS Online Learning Community on 10-8-2019.
+
+https://www.tidytuesday.com/
+
+https://github.com/rfordatascience/tidytuesday
+
+The source data is available at : https://openpowerlifting.org/data
+
+The dataset contains 41,152 observations and 16 variables.Only IPF federation records are analyzed.
+
+Each lifter’s efforts in different events are represented by a single row.
+
+
+#MissingData
+
+We choose some key variables and plot a simple summary of missingness. 
+
+```{r missing-data, echo=FALSE}
+
+library(naniar) 
+p_missing_data <- ipf_lifts %>% 
+
+  select(sex, age, bodyweight_kg, starts_with("best3"), date) %>% 
+
+  naniar::miss_var_summary()%>%
+  arrange(variable)
+
+
+p_missing_data 
+
+```
+
+
 
 Replication {.storyboard}
 =========================================
 
-### Replication of First Work
+### Replicating Connor Rothschild's #tidyTuesday submission for Powerlifting
 
 ```{r viz-01}
 #install.packages("devtools")
@@ -98,7 +208,13 @@ max_lifts_final %>%
 
 ***
 
-https://connorrothschild.github.io/tidytuesday/2019-10-08/index
+This is the animated dumbbell plots of the difference between the best male & female powerlifters at IPF events, Using #gganimate (and faceting w/ {magick}).
+
+github link: https://connorrothschild.github.io/tidytuesday/2019-10-08/index
+
+
+This static visualization shows the heaviest lifts from each year for both men and women categories.
+
 
 - The dumbell plot is matching with the theme of the dataset very well
 
@@ -106,7 +222,8 @@ https://connorrothschild.github.io/tidytuesday/2019-10-08/index
 
 - But it is lacking some sense of time and user interactiveness
 
-### Replication of Second Work
+
+### Animating the Top lifts visualization
 
 ```{r viz-animation-01}
 #install.packages('gganimate')
@@ -152,7 +269,7 @@ a_gif
 
 - Hence the user will not able to compare the change over the years and will not be able to see the trend
 
-### Replication of Third Work
+### A line chart of differences over time
 
 ```{r}
 animation2 <- max_lifts_final %>% 
@@ -191,7 +308,7 @@ b_gif
 
 - But this graph gives a little bit different visual of the data
 
-### Replication of Fourth Work
+### Animation Composition
 
 ```{r viz-animation-03}
 #install.packages("magick")
@@ -209,12 +326,14 @@ new_gif
 ```
 
 ***
+Placing Animations side-by-side with magick.
 
 - Showing both the graphs together is a huge improvement as it lets the user see the actual values, the change and also the trend over years
 
 - But there can be more ways to find out insights from the data and look at the distribution and hidden trends
 
 - Also the visuals can be made interactive to engage the user more with the data, hence come our visuals and ideas
+
 
 Our Visuals {.storyboard}
 =========================================
@@ -257,25 +376,28 @@ ipf_lifts %>%
 
 ### Visual 2
 
-```{r Ramya Visuals}
+```{r RamyaPrakash Visuals}
 library(gganimate)
 library(gifski)
 library(ggridges)
+library(scales)
+library(viridis)
+
 ipf_lifts_year <- ipf_lifts %>% 
                   mutate(year = format(date, "%Y")) %>%
-                  filter(year %in% c(2009:2019))
+                  mutate(decade = year(date) - (year(date) %% 10))
 
-ipf_lifts_decade<- ggplot(data=ipf_lifts_year, mapping = aes(x=best3squat_kg, y=year, fill=sex)) + 
+ipf_lifts_decade<- ggplot(data=ipf_lifts_year, mapping = aes(y=decade, x=best3deadlift_kg, fill=sex)) + 
 geom_density_ridges() + 
-scale_fill_manual(values = colorspace::darken(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#999999")), labels = c("female", "male")) +
-scale_color_manual(values = colorspace::darken(c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#999999"), 0.3))+
-labs(x = 	"Weight (kg)",y = "Year",title = "Squat") +
-scale_x_continuous(limits = c(10,500)) + theme_ridges()+ transition_manual(year)
+labs(x = 	"Weight (kg)",y = "Decade",title = "How men and women differ in Best of 3 Deadlifts \n by decades") +
+scale_fill_viridis(discrete = TRUE,name="Quartiles") + 
+scale_x_continuous(limits = c(10,500))+
+theme_ridges()+ 
+transition_manual(year)
 
 my_gif <- animate(ipf_lifts_decade, 
                  fps = 5, 
-                 duration = 10,
-        width = 800, height = 200, 
+                 duration = 5,
         renderer = gifski_renderer("./ipf_lifts_decade.gif"))
 
 my_gif
@@ -283,7 +405,17 @@ my_gif
 
 ***
 
-- Comments of Visual 2
+This animated vizualization shows how men and women differ in Best of 3 deadlifts by decades.
+
+
+-Male lifters are able to lift higher maximal weights than women. 
+
+-In the inital decade there is no data available for women participants.
+
+-There is no trend shown in maximum weights lifted over the time in men or women. 
+
+-In the Recent decades there is an increase in data available. 
+
 
 ### Visual 3
 
@@ -335,3 +467,27 @@ g_count
 ***
 
 - Comments of Visual 3
+
+Conclusion {.storyboard}
+=========================================
+
+### THANK YOU!!
+
+```{r conclusion-01,fig.height=5, fig.width=8}
+library(jpeg)
+
+pg <- readJPEG("img/ThankYou.jpg")
+plot.new() 
+rasterImage(pg,0,0,1,1)
+```
+
+
+***
+
+
+Our GitHub repo: https://github.com/RamyaPrakashPT/DataVisualization-DesignContest
+
+Our Rpubs link: http://rpubs.com/soumyadipmitra/designcontest
+
+
+Our BlogPost links:
