@@ -208,12 +208,22 @@ max_lifts_final %>%
 
 ***
 
+How Women and Men differ in Top lifts:
+
+
 This is the animated dumbbell plots of the difference between the best male & female powerlifters at IPF events, Using #gganimate (and faceting w/ {magick}).
 
 github link: https://connorrothschild.github.io/tidytuesday/2019-10-08/index
 
 
 This static visualization shows the heaviest lifts from each year for both men and women categories.
+
+
+1.	The axis labels, axis tick labels, and other plot annotations are appropriately sized, making it easy to read as highlighted in Wile Chapter 24”Use larger labels” https://serialmentor.com/dataviz/small-axis-labels.html
+
+2.	Whenver possible, design your figures so they don’t need a legend as highlighted in Wilke Chapter 20,”Redundant Coding” https://serialmentor.com/dataviz/redundant-coding.html and this visual makes use of this learning.
+
+3.	The visual has successfully avoided both overloading the figure with non-data ink and excessively erasing non-data ink thus escaping poor figure design. The same has been pointed in Wilke Chapter 23 “ Balance the data and context”, https://serialmentor.com/dataviz/balance-data-context.html
 
 
 - The dumbell plot is matching with the theme of the dataset very well
@@ -302,6 +312,15 @@ b_gif
 
 ***
 
+Difference over time:
+
+1.	The visual has multiple time courses, and correctly a line plot is used as pointed in Wilke Chapter 13 “Visualizing time series and other functions of an independent variable “section 13.2 https://serialmentor.com/dataviz/time-series.html#multiple-time-series-and-doseresponse-curves
+
+2.	By direct labeling the lines instead of providing a legend, they have successfully reduced the cognitive load required to read the figure as per Wilke Chapter 13, ““Visualizing time series and other functions of an independent variable”, section 13.2  https://serialmentor.com/dataviz/time-series.html#multiple-time-series-and-doseresponse-curves
+
+3.	The visual could have incorporated the title, data source statements. This figure could be posted on the web as is or otherwise used without separate caption block. This has been highlighted in Wilke Chapter 22, section 22.1 “Figure titles and caption”, https://serialmentor.com/dataviz/figure-titles-captions.html
+
+
 - This graph resolves the issue where it keeps on appending the previous year's data
 
 - The user is able to follow the change now and also able to visualize the trend
@@ -326,7 +345,11 @@ new_gif
 ```
 
 ***
-Placing Animations side-by-side with magick.
+
+Placing Animations side-by-side with magick:
+
+Since the 2 plots are in the same pane, some readability is lost wrt to axis of the plots as per Wilke Chapter 24 “Use larger labels”, https://serialmentor.com/dataviz/small-axis-labels.html
+
 
 - Showing both the graphs together is a huge improvement as it lets the user see the actual values, the change and also the trend over years
 
@@ -368,6 +391,8 @@ ipf_lifts %>%
 
 ***
 
+Distribution of Weight lifted in Squat for different Age Groups:
+
 - This visual shows the distribution of weights lifted by different age groups with the quartiles separated by color (Viridis)
 
 - The third quartile (Green) contains 50 to 75 precentile points and shows that people of ages between 24 to 34 lift the highest weights
@@ -405,6 +430,8 @@ my_gif
 
 ***
 
+How men and women differ in Best of 3 Deadlifts by decades:
+
 This animated vizualization shows how men and women differ in Best of 3 deadlifts by decades.
 
 
@@ -416,57 +443,66 @@ This animated vizualization shows how men and women differ in Best of 3 deadlift
 
 -In the Recent decades there is an increase in data available. 
 
-
 ### Visual 3
 
-```{r Shruti Visuals}
-ipf <- ipf_lifts %>% 
-  mutate(year = as.numeric(format(date, '%Y'))) %>% 
-  select(-event, -division, -federation, -date) %>% 
-  gather(activity, weight, best3squat_kg:best3deadlift_kg) %>% 
-  group_by(year)
-max <- ipf %>%
-  group_by(sex, activity, year) %>%
-  filter(place != "DD" & place != "DQ" & !is.na(weight) & weight == max(weight, na.rm = T),
-         year >= 1980) %>% 
-  ungroup() %>% 
-  group_by (name) %>% 
-  mutate(activity = recode(activity, "best3bench_kg" = "Bench", 
-  "best3deadlift_kg" = "Deadlift", "best3squat_kg" = "Squat"),
-  sex = recode(sex, "F" = "Female", 'M' = "Male")) %>%
-  arrange(desc(year))
-competition <- max %>% 
-  group_by(sex, name) %>% 
-  summarise(n = n()) %>% 
-  group_by(sex, n) %>% 
-  summarise(total = n())
-#number of max achieved
-g_count <- ggplot(competition, aes(x = n, y= total, fill = sex)) +
-  geom_bar(stat = "identity")+
-  facet_grid(sex ~ .)+
-  scale_x_continuous(breaks = seq(0,12,1))+
-  scale_y_continuous(breaks = seq(0,50,5))+
-  labs(y= "# of participants reaching the max", x = "Number of max achieved", 
-       title = "How do the max achievements distribute across participants?",
-       subtitle = "",
-       caption = "")+
-  theme(
-    strip.text = element_blank(),
-    plot.title = element_text(size = 12),
-    legend.title = element_blank(),
-    legend.position='top',
-    legend.background = element_rect(fill = "transparent"),
-    legend.box.background = element_rect(fill = "transparent"),
-    legend.spacing.x = unit(0.4, 'cm'),
-    legend.text = element_text(size = 12),
-  )
+***
 
-g_count
+Body weight versus maximum bench lift, wrap by gender:
+
+•	This visual shows how men and women differ in maximum weight lifted in bench lift by equipment types.
+
+•	For both men and women, majority of bench lifts are done in the equipment- single ply category and almost negligible in the wraps equipment category.
+
+•	Majority of men successfully lift weights around 200-250 kg.
+
+•	Majority of women successfully lift weights around 100-125 kg. 
+
+### Regression Visuals
+
+```{r Shruti Reg Visuals}
+library(tidyverse)
+library(janitor)
+library(readr)
+library(dplyr)
+
+df_clean <- ipf_lifts %>% 
+  janitor::clean_names()
+
+#Regression line between Total Kg lifted and Body Weight
+ipf<- df_clean %>% mutate(totalkg = best3squat_kg + best3bench_kg+ best3deadlift_kg)
+   
+model_colors <- RColorBrewer::brewer.pal(3, "Set1")
+
+
+p0 <- ggplot(data = ipf,
+            mapping = aes(x = bodyweight_kg, y = totalkg))
+
+p1 <- p0 +
+    geom_smooth(method = "lm", aes(color = "OLS", fill = "OLS")) +
+    geom_smooth(method = "lm", formula = y ~ splines::bs(x, df = 3),
+                aes(color = "Cubic Spline", fill = "Cubic Spline")) +
+    geom_smooth(method = "loess",
+                aes(color = "LOESS", fill = "LOESS"))+facet_wrap((~sex))
+
+
+p1 + scale_color_manual(name = "Models", values = model_colors) +
+    scale_fill_manual(name = "Models", values = model_colors) +
+    theme(legend.position = "top")
+
 ```
 
 ***
 
-- Comments of Visual 3
+Regression line between Total Kg lifted and Body Weight by gender:
+
+
+•	This visual shows a gender wise relation between total weight lifted across all 3 varieties and body weight of the lifter.
+
+•	While a woman of weight around 160 kg is likely to lift 700 kg, a man of the same weight is likely to lift around 950 kg.
+
+•	The total weight lifted by both the genders increase (as expected) as per their body weight though the increase seems to be more steep for men.
+
+
 
 Conclusion {.storyboard}
 =========================================
@@ -484,6 +520,7 @@ rasterImage(pg,0,0,1,1)
 
 ***
 
+Shiny app execution
 
 Our GitHub repo: https://github.com/RamyaPrakashPT/DataVisualization-DesignContest
 

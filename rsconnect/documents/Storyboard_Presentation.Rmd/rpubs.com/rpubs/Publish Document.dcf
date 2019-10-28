@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/543144/b2c25938626f4507b0d0bf3cd64f1733
+bundleId: https://api.rpubs.com/api/v1/document/543144/b2c25938626f4507b0d0bf3cd64f1733
+url: http://rpubs.com/RamyaPrakash/543144
+when: 1572233833.05552
