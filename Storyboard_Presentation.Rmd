@@ -235,7 +235,7 @@ This static visualization shows the heaviest lifts from each year for both men a
 
 ### Animating the Top lifts visualization
 
-```{r viz-animation-01}
+```{r viz-animation-01, fig.height=5, fig.width=10}
 #install.packages('gganimate')
 #install.packages("gifski")
 library(gganimate)
@@ -281,7 +281,7 @@ a_gif
 
 ### A line chart of differences over time
 
-```{r}
+```{r line chart,fig.height=5, fig.width=10}
 animation2 <- max_lifts_final %>% 
   ungroup %>% 
   mutate(lift = case_when(lift == "best3bench_kg" ~ "Bench",
@@ -445,6 +445,46 @@ This animated vizualization shows how men and women differ in Best of 3 deadlift
 
 ### Visual 3
 
+```{r Shruti Visuals}
+#Body weight versus maximum bench lift, wrap by gender
+
+library(tidyverse)
+library(janitor)
+library(readr)
+library(knitr)
+library(dplyr)
+
+
+df_clean <- ipf_lifts %>% 
+  janitor::clean_names()
+
+
+ipf_data <- df_clean %>% 
+  select(name:weight_class_kg, starts_with("best"), 
+         place, date, federation, meet_name)  %>% 
+  filter(!is.na(date)) 
+
+#Body weight versus maximum bench lift, wrap by gender
+p1 <- ggplot(data = ipf_data,
+       aes(x = bodyweight_kg, y = best3bench_kg,
+           color = equipment)) +
+  geom_jitter(stat="identity")+
+    facet_wrap(~sex, scales = "free") +
+ labs(x = "The recorded bodyweight of the lifter (kg)",
+      y = "Maximum successful attempt for the benchlift (kg)",
+            color = "Equipment category")+
+ theme_bw()+ 
+ theme(
+    axis.title.x = element_text(size=10),
+    axis.title.y = element_text(size=10),
+    legend.position="right",
+    axis.text = element_text(
+      size = 12))
+
+p1
+
+```
+
 ***
 
 Body weight versus maximum bench lift, wrap by gender:
@@ -520,11 +560,16 @@ rasterImage(pg,0,0,1,1)
 
 ***
 
-Shiny app execution
 
-Our GitHub repo: https://github.com/RamyaPrakashPT/DataVisualization-DesignContest
+Our GitHub repo: 
+https://github.com/RamyaPrakashPT/DataVisualization-DesignContest
 
-Our Rpubs link: http://rpubs.com/soumyadipmitra/designcontest
+Our Rpubs link: 
+http://rpubs.com/RamyaPrakash/DesignContest
+http://rpubs.com/soumyadipmitra/designcontest
+
+Shiny app link:
+https://soumyadip-mitra.shinyapps.io/DataVisualization-DesignContest/
 
 
-Our BlogPost links:
+THANK YOU!!
